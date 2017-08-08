@@ -11,79 +11,97 @@ import GameplayKit
 
 class GameScene: SKScene {
     
-    private var label : SKLabelNode?
-    private var spinnyNode : SKShapeNode?
+    var touchLocation = CGPoint(x: 0,y: 0)
+    var touchDown = false
+    
+    private var groundL = SKSpriteNode(imageNamed: "ground small")
+    private var groundR = SKSpriteNode(imageNamed: "ground small")
+    private var sea = SKSpriteNode(imageNamed: "sea")
+    private var seaR = SKSpriteNode(imageNamed: "sea")
+    
+    private var player = SKSpriteNode(imageNamed: "boat")
     
     override func didMove(to view: SKView) {
         
-        // Get label node from scene and store it for use later
-        self.label = self.childNode(withName: "//helloLabel") as? SKLabelNode
-        if let label = self.label {
-            label.alpha = 0.0
-            label.run(SKAction.fadeIn(withDuration: 2.0))
-        }
+        backgroundColor = SKColor.black
         
-        // Create shape node to use during mouse interaction
-        let w = (self.size.width + self.size.height) * 0.05
-        self.spinnyNode = SKShapeNode.init(rectOf: CGSize.init(width: w, height: w), cornerRadius: w * 0.3)
+        groundL.size.height = size.height/2
+        groundL.size.width = size.width/4
         
-        if let spinnyNode = self.spinnyNode {
-            spinnyNode.lineWidth = 2.5
-            
-            spinnyNode.run(SKAction.repeatForever(SKAction.rotate(byAngle: CGFloat(Double.pi), duration: 1)))
-            spinnyNode.run(SKAction.sequence([SKAction.wait(forDuration: 0.5),
-                                              SKAction.fadeOut(withDuration: 0.5),
-                                              SKAction.removeFromParent()]))
-        }
+        let xCoord = groundL.size.width * 0.5
+        let yCoord = groundL.size.height * 0.5
+        
+        
+        
+        groundR.size.height = size.height/2
+        groundR.size.width = size.width/4
+        
+        groundR.position = CGPoint(x: CGFloat(xCoord + size.width*6/8), y: yCoord)
+        groundL.position = CGPoint(x: xCoord, y: yCoord)
+        
+        sea.size.height = size.height/8
+        sea.size.width = size.width/4
+        
+        seaR.size.height = size.height/8
+        seaR.size.width = size.width/4
+        
+        seaR.position = CGPoint(x: CGFloat(size.width/2 - size.width/8), y: sea.size.height/2)
+        
+        sea.position = CGPoint(x: CGFloat(size.width/2 + size.width/8), y: sea.size.height/2)
+        
+        addChild(groundL)
+        addChild(groundR)
+        addChild(sea)
+        addChild(seaR)
+        
+        player.size.height = size.height/16
+        player.size.width = size.width/12
+        
+        player.position = CGPoint(x: CGFloat(size.width/4 + player.size.width/2), y: sea.size.height)// + player.size.height/2)
+       
+        addChild(player)
+        
     }
     
     
-    func touchDown(atPoint pos : CGPoint) {
-        if let n = self.spinnyNode?.copy() as! SKShapeNode? {
-            n.position = pos
-            n.strokeColor = SKColor.green
-            self.addChild(n)
-        }
-    }
-    
-    func touchMoved(toPoint pos : CGPoint) {
-        if let n = self.spinnyNode?.copy() as! SKShapeNode? {
-            n.position = pos
-            n.strokeColor = SKColor.blue
-            self.addChild(n)
-        }
-    }
-    
-    func touchUp(atPoint pos : CGPoint) {
-        if let n = self.spinnyNode?.copy() as! SKShapeNode? {
-            n.position = pos
-            n.strokeColor = SKColor.red
-            self.addChild(n)
-        }
-    }
+
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        if let label = self.label {
-            label.run(SKAction.init(named: "Pulse")!, withKey: "fadeInOut")
-        }
-        
-        for t in touches { self.touchDown(atPoint: t.location(in: self)) }
+        guard let touch = touches.first else { return }
+        touchLocation = touch.location(in: self)
+        touchDown = true
     }
     
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-        for t in touches { self.touchMoved(toPoint: t.location(in: self)) }
+        guard let touch = touches.first else { return }
+        touchLocation = touch.location(in: self)
+        
+        
     }
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-        for t in touches { self.touchUp(atPoint: t.location(in: self)) }
+        touchDown = false
     }
     
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
-        for t in touches { self.touchUp(atPoint: t.location(in: self)) }
+        touchDown = false
     }
     
     
     override func update(_ currentTime: TimeInterval) {
         // Called before each frame is rendered
+        if touchDown && touchLocation.x < 736*3/4 - player.size.width/2 && touchLocation.x > 736/4 + player.size.width/2
+        {
+            //player.position.x = touchLocation.x
+            player.run(SKAction.move(to: CGPoint(x: touchLocation.x, y: player.position.y), duration: 0.1))
+        }
+        else if touchDown && touchLocation.x > 736*3/4 - player.size.width/2
+        {
+            player.run(SKAction.move(to: CGPoint(x: 736*3/4 - player.size.width/2, y: player.position.y), duration: 0.1))
+        }
+        else if touchDown && touchLocation.x < 736*4 + player.size.width/2
+        {
+            player.run(SKAction.move(to: CGPoint(x: 736/4 + player.size.width/2, y: player.position.y), duration: 0.1))
+        }
     }
 }
