@@ -15,11 +15,16 @@ class GameScene: SKScene {
     var touchDown = false
     
     private var groundL = SKSpriteNode(imageNamed: "ground small")
-    private var groundR = SKSpriteNode(imageNamed: "ground small")
+    private var groundR = SKSpriteNode(imageNamed: "groundR")
+    private var groundR1 = SKSpriteNode(imageNamed: "groundR2")
+    private var groundR2 = SKSpriteNode(imageNamed: "groundR3")
     private var sea = SKSpriteNode(imageNamed: "sea")
     private var seaR = SKSpriteNode(imageNamed: "sea")
     
+    let playerTexture = SKTexture(imageNamed: "boat")
+    
     private var player = SKSpriteNode(imageNamed: "boat")
+    
     
     override func didMove(to view: SKView) {
         
@@ -28,18 +33,26 @@ class GameScene: SKScene {
         groundL.size.height = size.height/2
         groundL.size.width = size.width/4
         
+        
         let xCoord = groundL.size.width * 0.5
         let yCoord = groundL.size.height * 0.5
-        
-        
-        
-        groundR.size.height = size.height/2
-        groundR.size.width = size.width/4
-        
-        groundR.position = CGPoint(x: CGFloat(xCoord + size.width*6/8), y: yCoord)
         groundL.position = CGPoint(x: xCoord, y: yCoord)
         
-        groundL.physicsBody = SKPhysicsBody(rectangleOf: groundL.size)
+        
+        groundR.size.height = size.height
+        groundR.size.width = size.width/4
+        groundR.position = CGPoint(x: CGFloat(xCoord + size.width*6/8), y: size.height/2 - 30)
+        
+        groundR1.size.height = size.height
+        groundR1.size.width = size.width/4
+        groundR1.position = CGPoint(x: CGFloat(xCoord + size.width*6/8), y: size.height/2 - 30)
+        
+        groundR2.size.height = size.height
+        groundR2.size.width = size.width/4
+        groundR2.position = CGPoint(x: CGFloat(xCoord + size.width*6/8), y: size.height/2 - 30)
+        
+        
+        groundL.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: groundL.size.width, height: groundL.size.height - 25))
         groundL.physicsBody?.affectedByGravity = false
         groundL.physicsBody?.pinned = true
         groundL.physicsBody?.allowsRotation = false
@@ -54,10 +67,29 @@ class GameScene: SKScene {
         
         sea.position = CGPoint(x: CGFloat(size.width/2 + size.width/8), y: sea.size.height/2)
         
+        groundR.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: 186, height: 10), center: CGPoint(x: 0, y: -140))
+        groundR.physicsBody?.affectedByGravity = false
+        groundR.physicsBody?.pinned = true
+        groundR.physicsBody?.allowsRotation = false
+        
+        groundR1.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: 186, height: 10), center: CGPoint(x: 0, y: 0))
+        groundR1.physicsBody?.affectedByGravity = false
+        groundR1.physicsBody?.pinned = true
+        groundR1.physicsBody?.allowsRotation = false
+        
+        groundR2.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: 186, height: 10), center: CGPoint(x: 0, y: 180))
+        groundR2.physicsBody?.affectedByGravity = false
+        groundR2.physicsBody?.pinned = true
+        groundR2.physicsBody?.allowsRotation = false
+        
         addChild(groundL)
         addChild(groundR)
+        addChild(groundR1)
+        addChild(groundR2)
         addChild(sea)
         addChild(seaR)
+        
+        print(size.height, "Height,  ", size.width, "Width")
         
         player.size.height = size.height/16
         player.size.width = size.width/12
@@ -65,10 +97,22 @@ class GameScene: SKScene {
         player.position = CGPoint(x: CGFloat(size.width/4 + player.size.width/2), y: sea.size.height)// + player.size.height/2)
        
         
-        player.physicsBody = SKPhysicsBody(rectangleOf: player.size)
+        
+        
+        
+        
+        //player.physicsBody = SKPhysicsBody(rectangleOf: player.size)
+        //player.physicsBody = SKPhysicsBody(texture: playerTexture, size: CGSize(width: player.size.width, height: player.size.height))
+        player.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: player.size.width, height: player.size.height - 25))
         player.physicsBody?.affectedByGravity = false
         player.physicsBody?.allowsRotation = false
         player.physicsBody?.pinned = false
+        //player.physicsBody?.velocity = CGVector(dx: 0, dy: 0)
+        //player.physicsBody?.applyTorque(CGFloat(nan: 0,signaling: false))
+        //player.physicsBody?.isResting = true
+        player.physicsBody?.mass = CGFloat(0)
+        player.physicsBody?.isDynamic = false
+        
         
         
         addChild(player)
@@ -87,11 +131,11 @@ class GameScene: SKScene {
         cow.size.height = 15
         cow.size.width = 20
         
-        cow.position = CGPoint(x: cow.size.width/2, y: size.height/2 + cow.size.height/2)
+        cow.position = CGPoint(x: cow.size.width/2, y: size.height/2 + cow.size.height/2 - 25)
         
         cow.physicsBody = SKPhysicsBody(circleOfRadius: 17.5/2)
         cow.physicsBody?.isDynamic = true
-        
+        cow.physicsBody?.restitution = 1.05
         addChild(cow)
         
         var moveCow : SKAction
@@ -109,6 +153,7 @@ class GameScene: SKScene {
         guard let touch = touches.first else { return }
         touchLocation = touch.location(in: self)
         touchDown = true
+        print(touchLocation)
     }
     
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
