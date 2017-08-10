@@ -11,6 +11,8 @@ import SpriteKit
 
 class Cow : SKSpriteNode {
     
+    var firstBounce = false
+    
     init(imageNamed: String) {
         let texture = SKTexture(imageNamed: "\(imageNamed)")
         
