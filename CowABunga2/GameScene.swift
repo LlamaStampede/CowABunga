@@ -30,6 +30,7 @@ struct BodyType {
     static let Sea: UInt32 = 3
     static let Ground: UInt32 = 4
     static let Winner: UInt32 = 5
+    
 }
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
@@ -44,16 +45,23 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var randomBounce = 0
     var randomSpeed = 0
     
+    var boost = false
+    var gameOver = false
+    
     private var groundL = SKSpriteNode(imageNamed: "ground small")
     private var groundR = SKSpriteNode(imageNamed: "groundR")
     private var groundR1 = SKSpriteNode(imageNamed: "groundR2")
     private var groundR2 = SKSpriteNode(imageNamed: "groundR3")
     private var sea = SKSpriteNode(imageNamed: "sea")
     private var seaR = SKSpriteNode(imageNamed: "sea")
-    private var jumpButton = SKSpriteNode(imageNamed: "jumpButton")
+   // private var jumpButton = SKSpriteNode(imageNamed: "jumpButton")
+    
+    private var twoPoints = SKSpriteNode(imageNamed: "Spaceship")
+    private var threePoints = SKSpriteNode(imageNamed: "Spaceship")
     
     private var scoreLabel = SKLabelNode(fontNamed: "Arial")
     private var livesLabel = SKLabelNode(fontNamed: "Arial")
+    private var boostLabel = SKLabelNode(fontNamed: "Arial")
     
     let playerTexture = SKTexture(imageNamed: "boat")
     
@@ -139,7 +147,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         sea.physicsBody?.categoryBitMask = BodyType.Sea
         sea.physicsBody?.contactTestBitMask = BodyType.Cow
         
-        seaR.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: 10, height: 400), center: CGPoint(x: 475, y: 175))
+        seaR.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: 10, height: 160), center: CGPoint(x: 350, y: 40))
         seaR.physicsBody?.affectedByGravity = false
         seaR.physicsBody?.pinned = true
         seaR.physicsBody?.allowsRotation = false
@@ -147,27 +155,40 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         seaR.physicsBody?.categoryBitMask = BodyType.Winner
         seaR.physicsBody?.contactTestBitMask = BodyType.Cow
         
+        twoPoints.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: 10, height: 180), center: CGPoint(x: 700, y: 270))
+        twoPoints.physicsBody?.affectedByGravity = false
+        twoPoints.physicsBody?.pinned = true
+        twoPoints.physicsBody?.allowsRotation = false
+        twoPoints.physicsBody?.collisionBitMask = BodyType.Ground
+        twoPoints.physicsBody?.categoryBitMask = BodyType.Winner
+        twoPoints.physicsBody?.contactTestBitMask = BodyType.Cow
+        twoPoints.alpha = 0
+        
+        threePoints.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: 10, height: 50), center: CGPoint(x: 700, y: 392))
+        threePoints.physicsBody?.affectedByGravity = false
+        threePoints.physicsBody?.pinned = true
+        threePoints.physicsBody?.allowsRotation = false
+        threePoints.physicsBody?.collisionBitMask = BodyType.Ground
+        threePoints.physicsBody?.categoryBitMask = BodyType.Winner
+        threePoints.physicsBody?.contactTestBitMask = BodyType.Cow
+        threePoints.alpha = 0
+        
         addChild(groundL)
         addChild(groundR)
         addChild(groundR1)
         addChild(groundR2)
         addChild(sea)
         addChild(seaR)
+        addChild(twoPoints)
+        addChild(threePoints)
+        
         
         print(size.height, "Height,  ", size.width, "Width")
         
         
-        jumpButton.size.width = 75
-        jumpButton.size.height = 75
         
-        jumpButton.position = CGPoint(x: groundL.size.width/2 , y: groundL.size.height/2 )
         
-        jumpButton.physicsBody = SKPhysicsBody(rectangleOf: jumpButton.size)
-        jumpButton.physicsBody?.affectedByGravity = false
-        jumpButton.physicsBody?.pinned = true
-        jumpButton.physicsBody?.allowsRotation = false
         
-        addChild(jumpButton)
         
         player.size.height = size.height/16
         player.size.width = size.width/12
@@ -175,7 +196,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
        
         //player.physicsBody = SKPhysicsBody(rectangleOf: player.size)
         
-        var platformMode = 1
+        var platformMode = 0
         if platformMode == 0
         {
             player.physicsBody = SKPhysicsBody(texture: playerTexture, size: CGSize(width: player.size.width, height: player.size.height))
@@ -194,8 +215,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         player.physicsBody?.contactTestBitMask = BodyType.Cow
         
         addChild(player)
-        
-        run(SKAction.repeatForever(SKAction.sequence([SKAction.run(addCow), SKAction.wait(forDuration: waitTime)])))
+        if gameOver == false
+        {run(SKAction.repeatForever(SKAction.sequence([SKAction.run(addCow), SKAction.wait(forDuration: waitTime)])))}
         
         physicsWorld.gravity = CGVector(dx: 0, dy: -4.45)
         physicsWorld.contactDelegate = self
@@ -218,7 +239,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         addChild(livesLabel)
         
-        livesLabel.text = "0"
+        
+        boostLabel.fontColor = UIColor.white
+        
+        boostLabel.fontSize = 40
+        
+        boostLabel.position = CGPoint(x: size.width/2, y: size.height/2+100)
+        
+        addChild(boostLabel)
+        
+        boostLabel.text = "Begin!"
         
     }
     
@@ -314,7 +344,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func cowHitPlayer(cowNode : Cow, playerNode : SKSpriteNode)
     {
         print("cow hit player")
-        cowNode.physicsBody?.restitution = 1
+        if boost{
+            print("Boost")
+            cowNode.physicsBody?.restitution += 0.4
+        }
+        else{
+            cowNode.physicsBody?.restitution = 1
+        }
     }
     func cowHitWinner(cowNode : Cow, winnerNode : SKSpriteNode)
     {
@@ -337,9 +373,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         randomBounce = Int(arc4random_uniform(UInt32(30) + UInt32(score)))
         randomSpeed = Int(arc4random_uniform(randSpeed))
-        
-        cow = Cow(imageNamed: "Cow")
-        
+        if score < 100
+        {
+            cow = Cow(imageNamed: "Cow")
+        }
+        else{
+            cow = Cow(imageNamed: "Ryker2")
+        }
         cow.size.height = 15
         cow.size.width = 20
         
@@ -356,7 +396,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         addChild(cow)
         
         var moveCow : SKAction
-        
+        if randomSpeed > 20
+        {
+            randomSpeed = 20
+        }
         //moveCow = SKAction.move(to: CGPoint(x: size.width, y: cow.position.y), duration: 10)
         moveCow = SKAction.repeatForever(SKAction.moveBy(x: 10, y: 0, duration: Double(0.05) + Double(randomSpeed)/100))
         
@@ -369,22 +412,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard let touch = touches.first else { return }
         touchLocation = touch.location(in: self)
-        
-        if touches.count == 1{
-            if !jumpButton.contains(touchLocation){
-                touchDown = true
-            }
-            else {
-                // do jump button stuff
-                touchDown = false
-            }
-        } else{
-            
-        }
-        for t in touches {
+        touchDown = true
+        boost = false
+       /*for t in touches {
             let tLoc = t.location(in: self)
             
-        }
+        }*/
         
         touchDown = true
         print(touchLocation)
@@ -400,6 +433,33 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         touchDown = false
+        boost = true
+        
+        run(SKAction.sequence([SKAction.run(startBoost), SKAction.wait(forDuration: 0.2), SKAction.run(stopBoost)]))
+    }
+    
+    var returnBoost = [Cow]()
+    
+    func startBoost(){
+        boost = true
+        for cow in cowArray{
+            if cow.position.x >= player.position.x - player.size.width/2, cow.position.x <= player.position.x + player.size.width/2{
+                cow.physicsBody?.restitution += 0.4
+                returnBoost.append(cow as! Cow)
+                boostLabel.alpha = 1.0
+            }
+        }
+        
+        
+    }
+    
+    func stopBoost(){
+        boost = false
+        for cow in returnBoost{
+            cow.physicsBody?.restitution -= 0.4
+            boostLabel.alpha = 0.0
+        }
+        returnBoost.removeAll()
     }
     
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -409,8 +469,23 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     override func update(_ currentTime: TimeInterval) {
         // Called before each frame is rendered
+        if lives <= 0
+        {
+            gameOver = true
+            let scene = GameScene(size: (view?.bounds.size)!)
+            // Set the scale mode to scale to fit the window
+            scene.scaleMode = .aspectFill
+            
+            // Present the scene
+            view?.presentScene(scene)
+        }
         scoreLabel.text = String("Score: \(score)")
         livesLabel.text = String("Lives: \(lives)")
+        boostLabel.position.y += 2
+        if boostLabel.position.y >= size.height + 100
+        {
+            
+        }
         waitTime = 5.0 - 10 / Double(score)
         if touchDown && touchLocation.x < 736*3/4 - player.size.width/2 && touchLocation.x > 736/4 + player.size.width/2
         {
@@ -443,6 +518,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             {
                 cow.physicsBody?.restitution = 0.5
             }
+           
             
             
             //cow.physicsBody.
